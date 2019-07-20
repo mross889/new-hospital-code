@@ -1,4 +1,4 @@
-define([], function() {
+define(["esri/layers/GraphicsLayer", "esri/tasks/QueryTask", "esri/tasks/support/Query"], function(GraphicsLayer, QueryTask, Query) {
   // Private members
   // Set up statistics definition for client-side query
   //This is for the attribute query
@@ -36,93 +36,22 @@ define([], function() {
       }
     ]
   };
-  var resultsLayer = new GraphicsLayer();
-
-  var qTask = new QueryTask({
-    url:
-      "https://services.arcgis.com/o6oETlrWetREI1A2/arcgis/rest/services/Hospital_LL/FeatureServer",
-    outFields: ["*"]
-  });
-
-  var params = new Query({
-    returnGeometry: true,
-    outFields: ["*"]
-  });
-
- // Call doQuery() each time the button is clicked 
-  view.when(function() {
-    view.Accpane3.add("optionsDiv");
-    document.getElementById("doBtn").addEventListener("click", doQuery);
-  });
-
-  var attributeName = document.getElementById("attSelect");
-  var expressionSign = document.getElementById("signSelect");
-  var value = document.getElementById("valSelect");
-
-    // Executes each time the button is clicked
-  function doQuery() {
-    // Clear the results from a previous query
-  resultsLayer.removeAll();
-
-  params.where =
-      attributeName.value + expressionSign.value + value.value;
-
-    // executes the query and calls getResults() once the promise is resolved
-    // promiseRejected() is called if the promise is rejected
-    qTask
-      .execute(params)
-      .then(getResults)
-      .catch(promiseRejected);
-  }
-
-  // Called each time the promise is resolved
-  function getResults(response) {
-    // Loop through each of the results and assign a symbol and PopupTemplate
-    // to each so they may be visualized on the map
-    var hospResults = response.features.map(function(feature) {
-      feature.symbol = {
-        type: "simple-marker",
-        style: "circle",
-        color: "blue",
-        size: "8px", // pixels
-        outline: {
-          color: [124, 11, 11],
-          width: 2 // points
-        }
-      };
-      feature.popupTemplate = popupTemplate;
-      return feature;
-    });
-
-    resultsLayer.addMany(hospResults);
-
-    // animate to the results after they are added to the map
-    view.goTo(hospResults).then(function() {
-      view.popup.open({
-        features: hospResults,
-        featureMenuOpen: true,
-        updateLocationEnabled: true
-      });
-    });
-
-    // print the number of results returned to the user
-    document.getElementById("printResults").innerHTML =
-      hospResults.length + " results found!";
-  }
 
   // Called each time the promise is rejected
   function promiseRejected(error) {
     console.error("Promise rejected: ", error.message);
   }
-});
-//This is for the specific Query on the fly 
-const statDefinitions = ["Hosp_beds", "Occupency"].map(function(fieldName) {
+
+  //This is for the specific Query on the fly 
+  const statDefinitions = ["Hosp_beds", "Occupency"].map(function(fieldName) {
     return {
       onStatisticField: fieldName,
       outStatisticFieldName: fieldName + "_TOTAL",
       statisticType: "sum"
     };
   });
+
+  var resultsLayer = new GraphicsLayer();
 
   // Public (exported) members
   return {
@@ -159,6 +88,81 @@ const statDefinitions = ["Hosp_beds", "Occupency"].map(function(fieldName) {
         .catch(function(error) {
           console.log(error);
         });
+    },
+
+    resultsLayer: resultsLayer,
+
+    executeSpecificQuery(view) {
+      var qTask = new QueryTask({
+        url:
+          "https://services.arcgis.com/o6oETlrWetREI1A2/arcgis/rest/services/Hospital_LL/FeatureServer/0",
+        outFields: ["*"]
+      });
+    
+      var params = new Query({
+        returnGeometry: true,
+        outFields: ["*"]
+      });
+    
+      var attributeName = document.getElementById("attSelect");
+      var expressionSign = document.getElementById("signSelect");
+      var value = document.getElementById("valSelect");
+    
+      // Executes each time the button is clicked
+      function doQuery() {
+        // Clear the results from a previous query
+        resultsLayer.removeAll();
+      
+        params.where =
+            attributeName.value + expressionSign.value + value.value;
+      
+          // executes the query and calls getResults() once the promise is resolved
+          // promiseRejected() is called if the promise is rejected
+          qTask
+            .execute(params)
+            .then(getResults)
+            .catch(promiseRejected);
+      }
+      
+      // Called each time the promise is resolved
+      function getResults(response) {
+        console.log("response", response);
+        // Loop through each of the results and assign a symbol and PopupTemplate
+        // to each so they may be visualized on the map
+        var hospResults = response.features.map(function(feature) {
+          feature.symbol = {
+            type: "simple-marker",
+            style: "circle",
+            color: "blue",
+            size: "8px", // pixels
+            outline: {
+              color: [124, 11, 11],
+              width: 2 // points
+            }
+          };
+          feature.popupTemplate = popupTemplate;
+          return feature;
+        });
+    
+        resultsLayer.addMany(hospResults);
+
+        console.log("GOTO")
+    
+        // animate to the results after they are added to the map
+        view.goTo(hospResults).then(function() {
+          view.popup.open({
+            features: hospResults,
+            featureMenuOpen: true,
+            updateLocationEnabled: true
+          });
+        });
+    
+        // print the number of results returned to the user
+        document.getElementById("printResults").innerHTML =
+          hospResults.length + " results found!";
+      }
+
+      doQuery();
     }
   };
 });
