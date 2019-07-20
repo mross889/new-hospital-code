@@ -17,7 +17,7 @@ require([
   "esri/tasks/support/Query",
   "esri/symbols/SimpleMarkerSymbol",
   "esri/core/watchUtils",
-  "./QueryLib.js"
+  "./testQueryLibs.js"
 ], function(
   SketchViewModel,
   Polyline,
@@ -184,6 +184,12 @@ require([
       view.ui.add(compassWidget, "top-left");
       view.ui.add(toggle, "bottom-right");
       view.ui.add(legendExpand, "bottom-right");
+
+      // Call doQuery() each time the button is clicked
+      // view.Accpane3.add("optionsDiv"); // Dario: Do we need this?
+      document.getElementById("doBtn").addEventListener("click", function () {
+        QueryLib.executeSpecificQuery(view);
+      });
     });
 
     // Close the 'help' popup when view is focused
@@ -262,7 +268,8 @@ require([
     bufferGraphic.geometry = buffer;
 
     // Query total beds and beds occupied
-    QueryLib.queryLayerViewAgeStats(featureLayerView, buffer).then(function(
+    QueryLib.buffer = buffer;
+    QueryLib.queryLayerViewAgeStats(featureLayerView).then(function(
       newData
     ) {
       // Create a chart from the returned result
