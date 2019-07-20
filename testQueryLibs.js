@@ -55,8 +55,10 @@ define(["esri/layers/GraphicsLayer", "esri/tasks/QueryTask", "esri/tasks/support
 
   // Public (exported) members
   return {
+    buffer: null,
+
     //Spatial query for hospital feature layer view for statistics
-    queryLayerViewAgeStats(featureLayerView, buffer) {
+    queryLayerViewAgeStats(featureLayerView) {
       // Data storage for the chart
       let Hosp_beds = [],
         Occupency = [];
@@ -65,7 +67,7 @@ define(["esri/layers/GraphicsLayer", "esri/tasks/QueryTask", "esri/tasks/support
       // Get the total bed count and beds occupied for the hospitals
       const query = featureLayerView.layer.createQuery();
       query.outStatistics = statDefinitions;
-      query.geometry = buffer;
+      query.geometry = this.buffer;
 
       // Query the features on the client using FeatureLayerView.queryFeatures
       return featureLayerView
@@ -101,7 +103,8 @@ define(["esri/layers/GraphicsLayer", "esri/tasks/QueryTask", "esri/tasks/support
     
       var params = new Query({
         returnGeometry: true,
-        outFields: ["*"]
+        outFields: ["*"],
+        geometry: this.buffer
       });
     
       var attributeName = document.getElementById("attSelect");

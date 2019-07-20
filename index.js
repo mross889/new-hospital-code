@@ -268,7 +268,8 @@ require([
     bufferGraphic.geometry = buffer;
 
     // Query total beds and beds occupied
-    QueryLib.queryLayerViewAgeStats(featureLayerView, buffer).then(function(
+    QueryLib.buffer = buffer;
+    QueryLib.queryLayerViewAgeStats(featureLayerView).then(function(
       newData
     ) {
       // Create a chart from the returned result
